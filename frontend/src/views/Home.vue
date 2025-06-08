@@ -168,15 +168,15 @@ export default {
 
         async fetchFilteredExpenses() {
       const params = new URLSearchParams(this.filters).toString();
-      const res = await fetch(`http://localhost:5000/api/expenses?${params}`);
+      const res = await fetch(`https://zenwallet.onrender.com/api/expenses?${params}`);
       this.expenses = await res.json();
     },
     async fetchRevenues() {
-      const res = await fetch('http://localhost:5000/api/revenues');
+      const res = await fetch('https://zenwallet.onrender.com/api/revenues');
       this.revenues = await res.json();
     },
     async fetchExpenses() {
-      const res = await fetch('http://localhost:5000/api/expenses');
+      const res = await fetch('https://zenwallet.onrender.com/api/expenses');
       this.expenses = await res.json();
     },
     onRevenueAdded() {
@@ -192,7 +192,7 @@ export default {
       if (!confirm('Êtes-vous sûr de vouloir supprimer ce revenu ?')) return;
 
       try {
-        const response = await fetch(`http://localhost:5000/api/revenues/${id}`, {
+        const response = await fetch(`https://zenwallet.onrender.com/api/revenues/${id}`, {
           method: 'DELETE'
         });
         if (!response.ok) throw new Error('Erreur lors de la suppression du revenu');
@@ -205,7 +205,7 @@ export default {
       if (!confirm('Êtes-vous sûr de vouloir supprimer cette dépense ?')) return;
 
       try {
-        const response = await fetch(`http://localhost:5000/api/expenses/${id}`, {
+        const response = await fetch(`https://zenwallet.onrender.com/api/expenses/${id}`, {
           method: 'DELETE'
         });
         if (!response.ok) throw new Error('Erreur lors de la suppression');
@@ -234,7 +234,7 @@ export default {
 
     async submitBudget() {
       try {
-        const res = await fetch('http://localhost:5000/api/budget', {
+        const res = await fetch('https://zenwallet.onrender.com/api/budget', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(this.budgetForm)
@@ -251,7 +251,7 @@ window.location.reload();
   async fetchMonthlyBudget() {
     try {
       const month = new Date().toISOString().slice(0, 7); // ex: "2025-06"
-      const url = `http://localhost:5000/api/budget/${month}`;
+      const url = `https://zenwallet.onrender.com/api/budget/${month}`;
       // console.log('Requête GET sur :', url);
 
       const res = await fetch(url);

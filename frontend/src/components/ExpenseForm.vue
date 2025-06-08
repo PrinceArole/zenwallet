@@ -57,7 +57,7 @@ export default {
   methods: {
     async submitForm() {
       try {
-        const url = this.expense ? `http://localhost:5000/api/expenses/${this.expense.id}` : 'http://localhost:5000/api/expenses';
+        const url = this.expense ? `https://zenwallet.onrender.com/api/expenses/${this.expense.id}` : 'https://zenwallet.onrender.com/api/expenses';
         const method = this.expense ? 'PUT' : 'POST';
 
         const response = await fetch(url, {

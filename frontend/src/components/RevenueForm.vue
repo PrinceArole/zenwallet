@@ -56,8 +56,8 @@ export default {
     async submitForm() {
       try {
         const url = this.isEditing 
-          ? `http://localhost:5000/api/revenues/${this.revenue.id}`
-          : 'http://localhost:5000/api/revenues';
+          ? `https://zenwallet.onrender.com/api/revenues/${this.revenue.id}`
+          : 'https://zenwallet.onrender.com/api/revenues';
         
         const method = this.isEditing ? 'PUT' : 'POST';
 

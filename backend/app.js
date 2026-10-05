@@ -21,8 +21,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  //origin: 'https://zenwallet-app.onrender.com', // 🔐 domaine autorisé
-  origin: 'http://localhost:5173', // 🔐 domaine autorisé
+  origin: 'https://zenwallet-app.onrender.com', // 🔐 domaine autorisé
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));

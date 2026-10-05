@@ -1,0 +1,17 @@
+{
+    "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+    "name": "ZEN WALLET",
+    "short_name": "zenwallet",
+    "display": "standalone",
+    "start_url": "/dashboard",
+    "icons": [
+      { "src": "./vite.svg", "sizes": "192x192", "type": "svg" },
+      { "src": "./vite.svg", "sizes": "256x256", "type": "svg" },
+      { "src": "./vite.svg", "sizes": "384x384", "type": "svg" },
+      { "src": "./vite.svg", "sizes": "512x512", "type": "svg" },
+      { "src": "./vite.svg", "sizes": "512x512", "type": "svg", "purpose": "any" }
+
+    ],
+    "id": "?homescreen=1"
+  }
+  

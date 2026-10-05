@@ -46,7 +46,7 @@ Ce projet a été réalisé dans le cadre du module 3DVP pour mettre en pratique
 ### 1. Cloner le dépôt
 
 ```bash
-git clone https://github.com/PrinceArole/Zenwallet.git
+git clone https://github.com/PrinceArole/zenwalle.git
 cd Zenwallet
 ```
 
@@ -73,7 +73,7 @@ npm run dev
 
 ## 🌍 Démo en ligne
 
-🔗 [Lien Render (démo déployée)](https://Zenwallet-app.onrender.com)
+🔗 [Lien Render (démo déployée)](https://zenwallet-app.onrender.com)
 
 ---
 

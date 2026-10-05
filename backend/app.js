@@ -1,6 +1,7 @@
 const dotenv = require('dotenv');
 dotenv.config();
 const express = require('express');
+const { DataTypes } = require('sequelize');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const sequelize = require('./config/database');
@@ -23,8 +24,26 @@ const configuredOrigins = (process.env.FRONTEND_ORIGIN || '')
 const allowedOrigins = new Set([
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'https://zenwallet.onrender.com',
   ...configuredOrigins,
 ]);
+
+async function migrateUserOwnershipColumns() {
+  const queryInterface = sequelize.getQueryInterface();
+
+  for (const tableName of ['Revenues', 'Expenses', 'MonthlyBudgets']) {
+    const columns = await queryInterface.describeTable(tableName);
+    if (!columns.user_id) {
+      await queryInterface.addColumn(tableName, 'user_id', {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: { model: 'Users', key: 'id' },
+        onDelete: 'CASCADE',
+      });
+      console.log(`Colonne user_id ajoutée à ${tableName}.`);
+    }
+  }
+}
 
 app.use(cors({
   origin(origin, callback) {
@@ -48,7 +67,8 @@ app.get('/', (req, res) => {
 async function startServer() {
   try {
     await sequelize.authenticate();
-    await sequelize.sync({ alter: true });
+    await sequelize.sync();
+    await migrateUserOwnershipColumns();
     console.log('Connexion à SQLite réussie et modèles synchronisés.');
     try {
       startDatabaseBackupSchedule();

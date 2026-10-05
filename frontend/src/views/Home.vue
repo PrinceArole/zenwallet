@@ -47,7 +47,7 @@
       <section class="balance-banner" aria-label="Solde actuel">
         <div class="balance-copy">
           <span class="overline overline-light">VOTRE SOLDE DISPONIBLE</span>
-          <strong>{{ formatCurrency(soldeActuel) }}</strong>
+          <strong>{{ formatAmount(soldeActuel) }}</strong>
           <span class="balance-caption">Budget du mois + revenus − dépenses</span>
         </div>
         <div class="balance-decoration" aria-hidden="true">
@@ -61,19 +61,19 @@
         <article class="summary-card">
           <div class="summary-top"><span class="summary-icon budget-icon">◷</span><span class="summary-trend">CE MOIS</span></div>
           <span class="summary-label">Budget défini</span>
-          <strong>{{ formatCurrency(monthlyBudgetAmount) }}</strong>
+          <strong>{{ formatAmount(monthlyBudgetAmount) }}</strong>
           <span class="summary-foot">{{ budgetRecord ? 'Votre enveloppe mensuelle' : 'Aucun budget défini' }}</span>
         </article>
         <article class="summary-card">
           <div class="summary-top"><span class="summary-icon income-icon">↙</span><span class="summary-trend">CE MOIS</span></div>
           <span class="summary-label">Revenus</span>
-          <strong>{{ formatCurrency(totalRevenus) }}</strong>
+          <strong>{{ formatAmount(totalRevenus) }}</strong>
           <span class="summary-foot">{{ monthRevenues.length }} {{ monthRevenues.length > 1 ? 'entrées' : 'entrée' }} enregistrée{{ monthRevenues.length > 1 ? 's' : '' }}</span>
         </article>
         <article class="summary-card">
           <div class="summary-top"><span class="summary-icon expense-icon">↗</span><span class="summary-trend">CE MOIS</span></div>
           <span class="summary-label">Dépenses</span>
-          <strong>{{ formatCurrency(totalDepenses) }}</strong>
+          <strong>{{ formatAmount(totalDepenses) }}</strong>
           <span class="summary-foot">{{ monthExpenses.length }} {{ monthExpenses.length > 1 ? 'opérations' : 'opération' }} enregistrée{{ monthExpenses.length > 1 ? 's' : '' }}</span>
         </article>
       </section>
@@ -86,12 +86,12 @@
           </div>
           <form class="budget-form" @submit.prevent="submitBudget">
             <label class="form-field budget-month"><span>Mois</span><input v-model="budgetForm.month" type="month" required @change="fetchMonthlyBudget"></label>
-            <label class="form-field"><span>Enveloppe (€)</span><input v-model.number="budgetForm.amount" type="number" min="0" step="0.01" placeholder="0,00" required></label>
+            <label class="form-field"><span>Enveloppe</span><input v-model.number="budgetForm.amount" type="number" min="0" step="0.01" placeholder="0,00" required></label>
             <button class="button button-dark" type="submit" :disabled="savingBudget">{{ savingBudget ? 'Enregistrement…' : budgetRecord ? 'Mettre à jour' : 'Définir le budget' }}</button>
           </form>
           <div class="budget-progress-copy"><span>Dépenses utilisées</span><strong>{{ budgetUsage }} %</strong></div>
           <div class="progress-track"><span :style="{ width: `${budgetUsage}%` }"></span></div>
-          <div class="budget-foot"><span>{{ formatCurrency(totalDepenses) }} dépensés</span><span>{{ formatCurrency(Math.max(monthlyBudgetAmount - totalDepenses, 0)) }} restants</span></div>
+          <div class="budget-foot"><span>{{ formatAmount(totalDepenses) }} dépensés</span><span>{{ formatAmount(Math.max(monthlyBudgetAmount - totalDepenses, 0)) }} restants</span></div>
         </article>
 
         <article class="panel chart-panel">
@@ -121,7 +121,7 @@
             <div class="transaction-symbol" :class="item.kind === 'income' ? 'transaction-symbol-income' : 'transaction-symbol-expense'">{{ item.kind === 'income' ? '↙' : '↗' }}</div>
             <div class="transaction-description"><strong>{{ item.title }}</strong><span>{{ item.category || item.source || 'Transaction' }} · {{ formatDate(item.date) }}</span></div>
             <span v-if="item.tag" class="transaction-tag">{{ item.tag }}</span>
-            <strong class="transaction-amount" :class="item.kind === 'income' ? 'amount-income' : 'amount-expense'">{{ item.kind === 'income' ? '+' : '−' }}{{ formatCurrency(item.amount) }}</strong>
+            <strong class="transaction-amount" :class="item.kind === 'income' ? 'amount-income' : 'amount-expense'">{{ item.kind === 'income' ? '+' : '−' }}{{ formatAmount(item.amount) }}</strong>
             <div class="transaction-controls">
               <button class="icon-button" type="button" :aria-label="`Modifier ${item.title}`" title="Modifier" @click="editTransaction(item)">✎</button>
               <button class="icon-button delete-control" type="button" :aria-label="`Supprimer ${item.title}`" title="Supprimer" @click="deleteTransaction(item)">×</button>
@@ -221,8 +221,8 @@ export default {
     await Promise.all([this.fetchRevenues(), this.fetchExpenses(), this.fetchMonthlyBudget()]);
   },
   methods: {
-    formatCurrency(value) {
-      return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(Number(value) || 0);
+    formatAmount(value) {
+      return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(Number(value) || 0);
     },
     formatDate(value) {
       return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T12:00:00`));

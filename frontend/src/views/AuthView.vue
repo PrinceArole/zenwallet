@@ -17,7 +17,7 @@
           <div class="preview-heading">
             <div>
               <span class="preview-label">SOLDE DISPONIBLE</span>
-              <strong>2 840,50 €</strong>
+              <strong>2 840,50</strong>
             </div>
             <span class="preview-trend">↗ 12,8 %</span>
           </div>

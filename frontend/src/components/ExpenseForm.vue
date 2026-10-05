@@ -4,7 +4,7 @@
     <h2>{{ expense ? 'Modifier la dépense' : 'Ajouter une dépense' }}</h2>
 
     <label class="form-field"><span>Libellé</span><input v-model.trim="form.title" placeholder="Ex. Courses, abonnement…" required></label>
-    <label class="form-field"><span>Montant (€)</span><input v-model.number="form.amount" type="number" min="0.01" step="0.01" placeholder="0,00" required></label>
+    <label class="form-field"><span>Montant</span><input v-model.number="form.amount" type="number" min="0.01" step="0.01" placeholder="0,00" required></label>
     <label class="form-field"><span>Date</span><input v-model="form.date" type="date" required></label>
     <label class="form-field"><span>Catégorie</span><select v-model="form.category" required>
         <option disabled value="">Choisir une catégorie</option>

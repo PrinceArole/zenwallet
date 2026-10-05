@@ -25,6 +25,7 @@ const allowedOrigins = new Set([
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'https://zenwallet.onrender.com',
+  'https://zenwallet-app.onrender.com',
   ...configuredOrigins,
 ]);
 

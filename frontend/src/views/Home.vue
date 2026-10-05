@@ -4,15 +4,15 @@
       <h1 class="text-3xl font-bold mb-6 text-center">Zenwallet</h1>
 
       <!-- Solde -->
-      <div class="bg-white p-4 rounded-lg shadow mb-6 text-center">
-        <h2 class="text-xl font-semibold mb-2">💼 Bilan mensuel</h2>
-        <div class="flex justify-around text-lg font-medium">
-          <div>Budget : {{ monthlyBudgetAmount }} €</div>
-          <div>Revenus : {{ totalRevenus }} €</div>
-          <div>Dépenses : {{ totalDepenses }} €</div>
+      <div class="bg-white p-4 rounded-lg shadow mb-6">
+        <h2 class="text-2xl font-semibold uppercase mb-2 text-center">💼 Bilan mensuel</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 text-lg font-medium">
+          <div>Budget : {{ monthlyBudgetAmount }} </div>
+          <div>Revenus : {{ totalRevenus }} </div>
+          <div>Dépenses : {{ totalDepenses }} </div>
         </div>
         <p class="text-3xl font-bold mt-4" :class="soldeActuel < 0 ? 'text-red-600' : 'text-green-600'">
-          Solde actuel : {{ soldeActuel }} €
+          Solde actuel : {{ soldeActuel }} 
         </p>
       </div>
 
@@ -31,10 +31,16 @@
 
       <form @submit.prevent="submitBudget" class="bg-white p-4 rounded shadow mb-6">
         <h3 class="font-semibold mb-2">💼 Définir le budget mensuel</h3>
-       <div class="flex justify-center items-center space-x-5">
-           <input v-model="budgetForm.month" type="month" placeholder="Mois (ex: Juin)" class="border rounded px-3 py-1 w-full mb-2" required />
-        <input v-model="budgetForm.amount" type="number" placeholder="Montant (€)" class="border rounded px-3 py-1 w-full mb-2" required />
-        <button class="bg-indigo-600 text-white px-4 py-2 rounded mt-2">Enregistrer</button>
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+           <div class="">
+            <input v-model="budgetForm.month" type="month" placeholder="Mois (ex: Juin)" class="border rounded px-3 py-1 w-full mb-2" required />
+           </div>
+        <div class="">
+          <input v-model="budgetForm.amount" type="number" placeholder="Montant ()" class="border rounded px-3 py-1 w-full mb-2" required />
+        </div>
+        <div class="">
+          <button class="bg-indigo-600 text-white px-4 py-2 rounded w-full">Enregistrer</button>
+        </div>
        </div>
       </form>
       <!-- <div class="bg-white p-4 rounded shadow mb-4">
@@ -68,7 +74,7 @@
             <li v-for="r in revenues" :key="r.id" class="flex justify-between border-b pb-1 items-center">
               <div>
                 <span>{{ r.title }}</span>
-                <span class="text-green-600 font-medium ml-2">+{{ r.amount }} €</span>
+                <span class="text-green-600 font-medium ml-2">+{{ r.amount }} </span>
               </div>
               <div class="flex space-x-2">
                 <button @click="openEditRevenue(r)" class="text-blue-600 hover:underline text-sm" title="Modifier">
@@ -95,7 +101,7 @@
                 <span v-if="e.tag" class="ml-2 text-xs bg-yellow-300 text-yellow-900 rounded px-1">{{ e.tag }}</span>
               </div>
               <div class="flex items-center space-x-2">
-                <span class="text-red-600 font-medium">-{{ e.amount }} €</span>
+                <span class="text-red-600 font-medium">-{{ e.amount }} </span>
                 <button @click="editExpense(e)" class="text-blue-600 hover:underline text-sm" title="Modifier">
                   <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                     <path fill-rule="evenodd" d="M14 4.182A4.136 4.136 0 0 1 16.9 3c1.087 0 2.13.425 2.899 1.182A4.01 4.01 0 0 1 21 7.037c0 1.068-.43 2.092-1.194 2.849L18.5 11.214l-5.8-5.71 1.287-1.31.012-.012Zm-2.717 2.763L6.186 12.13l2.175 2.141 5.063-5.218-2.141-2.108Zm-6.25 6.886-1.98 5.849a.992.992 0 0 0 .245 1.026 1.03 1.03 0 0 0 1.043.242L10.282 19l-5.25-5.168Zm6.954 4.01 5.096-5.186-2.218-2.183-5.063 5.218 2.185 2.15Z" clip-rule="evenodd"/>

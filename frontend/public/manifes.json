@@ -3,7 +3,7 @@
     "name": "ZEN WALLET",
     "short_name": "zenwallet",
     "display": "standalone",
-    "start_url": "/dashboard",
+    "start_url": "/",
     "icons": [
       { "src": "./vite.svg", "sizes": "192x192", "type": "svg" },
       { "src": "./vite.svg", "sizes": "256x256", "type": "svg" },

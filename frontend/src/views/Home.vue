@@ -222,7 +222,7 @@ export default {
   },
   methods: {
     formatCurrency(value) {
-      return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(value) || 0);
+      return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(Number(value) || 0);
     },
     formatDate(value) {
       return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T12:00:00`));

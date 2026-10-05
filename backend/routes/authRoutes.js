@@ -7,7 +7,7 @@ const User = require('../models/User');
 const Revenue = require('../models/Revenue');
 const Expense = require('../models/Expense');
 const Budget = require('../models/MonthlyBudget');
-const { cookieName, requireAuth } = require('../middleware/requireAuth');
+const { cookieName } = require('../middleware/requireAuth');
 
 const router = express.Router();
 const sessionDuration = 7 * 24 * 60 * 60 * 1000;
@@ -101,11 +101,29 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.get('/me', requireAuth, async (req, res) => {
+router.get('/me', async (req, res) => {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    return res.status(503).json({ error: 'Authentification indisponible : configure JWT_SECRET (32 caractères minimum).' });
+  }
+
+  const token = req.cookies && req.cookies[cookieName];
+  if (!token) return res.json({ user: null });
+
+  let userId;
   try {
-    const user = await User.findByPk(req.userId);
-    if (!user) return res.status(401).json({ error: 'Compte introuvable.' });
-    return res.json({ user: serializeUser(user) });
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    userId = payload.sub;
+  } catch (error) {
+    if (['JsonWebTokenError', 'TokenExpiredError', 'NotBeforeError'].includes(error.name)) {
+      return res.json({ user: null });
+    }
+    console.error('Erreur lors de la validation de la session :', error);
+    return res.status(500).json({ error: 'Impossible de vérifier la session.' });
+  }
+
+  try {
+    const user = await User.findByPk(userId);
+    return res.json({ user: user ? serializeUser(user) : null });
   } catch (error) {
     console.error('Erreur lors de la récupération du compte :', error);
     return res.status(500).json({ error: 'Impossible de récupérer la session.' });

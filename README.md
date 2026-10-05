@@ -85,6 +85,8 @@ npm install
 npm run dev
 ```
 
+Le frontend inclut un manifeste PWA et des icônes pour l’installation sur mobile. En production, déploie le dossier `frontend/dist` sur un hébergement HTTPS, puis utilise « Installer l’application » dans le navigateur Android ou « Ajouter à l’écran d’accueil » depuis le menu de partage de Safari sur iPhone.
+
 ---
 
 ## 🌍 Démo en ligne

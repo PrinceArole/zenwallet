@@ -61,6 +61,12 @@ npx nodemon app.js
 
 > SQLite est utilisé automatiquement : le fichier `backend/database.sqlite` est créé au démarrage.
 
+Pour supprimer toutes les données et recréer les tables de la base, lancez depuis `backend` :
+
+```bash
+npm run db:reset
+```
+
 ### 3. Frontend
 
 ```bash

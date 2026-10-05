@@ -11,8 +11,8 @@
           <div>Revenus : {{ totalRevenus }} </div>
           <div>Dépenses : {{ totalDepenses }} </div>
         </div>
-        <p class="text-3xl font-bold mt-4" :class="soldeActuel < 0 ? 'text-red-600' : 'text-green-600'">
-          Solde actuel : {{ soldeActuel }} 
+        <p class="text-3xl font-bold mt-4 text-center" :class="soldeActuel < 0 ? 'text-red-600' : 'text-green-600'">
+          Solde actuel : <br> {{ soldeActuel }} 
         </p>
       </div>
 
@@ -30,16 +30,16 @@
 
 
       <form @submit.prevent="submitBudget" class="bg-white p-4 rounded shadow mb-6">
-        <h3 class="font-semibold mb-2">💼 Définir le budget mensuel</h3>
+        <h3 class="font-semibold mb-2">💼 {{ budgetRecord ? 'Modifier le budget mensuel' : 'Définir le budget mensuel' }}</h3>
        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
            <div class="">
-            <input v-model="budgetForm.month" type="month" placeholder="Mois (ex: Juin)" class="border rounded px-3 py-1 w-full mb-2" required />
+            <input v-model="budgetForm.month" @change="fetchMonthlyBudget" type="month" placeholder="Mois (ex: Juin)" class="border rounded px-3 py-1 w-full mb-2" required />
            </div>
         <div class="">
           <input v-model="budgetForm.amount" type="number" placeholder="Montant ()" class="border rounded px-3 py-1 w-full mb-2" required />
         </div>
         <div class="">
-          <button class="bg-indigo-600 text-white px-4 py-2 rounded w-full">Enregistrer</button>
+          <button class="bg-indigo-600 text-white px-4 py-2 rounded w-full">{{ budgetRecord ? 'Mettre à jour' : 'Enregistrer' }}</button>
         </div>
        </div>
       </form>
@@ -137,6 +137,9 @@ export default {
     StatisticsCharts,
   },
   data() {
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
     return {
       selectedRevenue: null,
       showAddRevenue: false,
@@ -144,11 +147,12 @@ export default {
       showEditExpense: false,
       expenseToEdit: null,
       monthlyBudgetAmount: 0,
+      budgetRecord: null,
       revenues: [],
       expenses: [],
       budgetForm: {
-        month: '',
-        year: new Date().getFullYear(),
+        month: currentMonth,
+        year: now.getFullYear(),
         amount: ''
       },
       filters: {
@@ -240,14 +244,28 @@ export default {
 
     async submitBudget() {
       try {
-        const res = await fetch('https://zenwallet.onrender.com/api/budget', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(this.budgetForm)
-        });
-        if (!res.ok) throw new Error('Erreur lors de la sauvegarde');
-        alert('Budget enregistré');
-window.location.reload();
+        const [year] = this.budgetForm.month.split('-');
+        const isEditing = Boolean(this.budgetRecord);
+        const res = await fetch(
+          isEditing
+            ? `https://zenwallet.onrender.com/api/budget/${this.budgetRecord.id}`
+            : 'https://zenwallet.onrender.com/api/budget',
+          {
+            method: isEditing ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...this.budgetForm,
+              year: Number(year),
+              amount: Number(this.budgetForm.amount)
+            })
+          }
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || data.message || 'Erreur lors de la sauvegarde');
+        this.budgetRecord = data;
+        this.budgetForm.amount = data.amount;
+        this.monthlyBudgetAmount = Number(data.amount);
+        alert(isEditing ? 'Budget mis à jour' : 'Budget enregistré');
       } catch (err) {
         alert(err.message);
       }
@@ -255,16 +273,27 @@ window.location.reload();
 
 
   async fetchMonthlyBudget() {
+    const month = this.budgetForm.month;
+    this.budgetRecord = null;
+    this.budgetForm.amount = '';
+    this.monthlyBudgetAmount = 0;
+
+    if (!month) return;
+
+    const [year] = month.split('-');
+    this.budgetForm.year = Number(year);
+
     try {
-      const month = new Date().toISOString().slice(0, 7); // ex: "2025-06"
       const url = `https://zenwallet.onrender.com/api/budget/${month}`;
-      // console.log('Requête GET sur :', url);
-
       const res = await fetch(url);
-      const data = await res.json();
+      if (res.status === 404) return;
 
-      // console.log('Réponse budget :', data);
-      this.monthlyBudgetAmount = data?.amount || 0;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || 'Erreur lors de la récupération du budget');
+      this.budgetRecord = data;
+      this.budgetForm.year = data.year;
+      this.budgetForm.amount = data.amount;
+      this.monthlyBudgetAmount = Number(data.amount);
     } catch (err) {
       console.error('Erreur lors de la récupération du budget :', err);
     }

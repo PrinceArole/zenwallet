@@ -14,6 +14,24 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.put('/:id', async (req, res) => {
+  try {
+    const { month, year, amount } = req.body;
+    const [updated] = await Budget.update(
+      { month, year, amount },
+      { where: { id: req.params.id } }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: 'Aucun budget trouvé.' });
+    }
+
+    const budget = await Budget.findByPk(req.params.id);
+    return res.json(budget);
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+});
 
 router.get('/:month', async (req, res) => {
   try {

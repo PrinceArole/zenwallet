@@ -1,7 +1,7 @@
 <template>
-  <div v-if="show" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
-      <button @click="$emit('close')" class="absolute top-2 right-2 text-gray-500 hover:text-red-500">
+  <div v-if="show" class="modal-backdrop" @click.self="$emit('close')">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <button class="modal-close" type="button" aria-label="Fermer" @click="$emit('close')">
         ✕
       </button>
       <slot />

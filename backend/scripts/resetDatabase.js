@@ -1,4 +1,5 @@
 const sequelize = require('../config/database');
+require('../models/User');
 require('../models/Revenue');
 require('../models/Expense');
 require('../models/MonthlyBudget');

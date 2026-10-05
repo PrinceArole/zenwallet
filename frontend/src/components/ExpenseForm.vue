@@ -1,27 +1,39 @@
 <template>
-  <form @submit.prevent="submitForm" class="bg-white p-4 rounded shadow mb-4">
-    <h3 class="font-semibold mb-2">Ajouter une dépense</h3>
+  <form @submit.prevent="submitForm" class="entry-form">
+    <span class="overline">GARDER LE CAP</span>
+    <h2>{{ expense ? 'Modifier la dépense' : 'Ajouter une dépense' }}</h2>
 
-    <input v-model="form.title" placeholder="Titre" class="border rounded px-3 py-1 w-full mb-2" required />
-    <input v-model.number="form.amount" type="number" placeholder="Montant (€)" class="border rounded px-3 py-1 w-full mb-2" required />
-    <input v-model="form.date" type="date" class="border rounded px-3 py-1 w-full mb-2" required />
-    <select v-model="form.category" class="border rounded px-3 py-1 w-full mb-2" required>
-        <option disabled value="">-- Choisir une catégorie --</option>
+    <label class="form-field"><span>Libellé</span><input v-model.trim="form.title" placeholder="Ex. Courses, abonnement…" required></label>
+    <label class="form-field"><span>Montant (€)</span><input v-model.number="form.amount" type="number" min="0.01" step="0.01" placeholder="0,00" required></label>
+    <label class="form-field"><span>Date</span><input v-model="form.date" type="date" required></label>
+    <label class="form-field"><span>Catégorie</span><select v-model="form.category" required>
+        <option disabled value="">Choisir une catégorie</option>
         <option>Alimentation</option>
         <option>Transport</option>
         <option>Logement</option>
         <option>Loisirs</option>
         <option>Santé</option>
         <option>Autres</option>
-    </select>
-    <!-- Nouveau champ Tag -->
-    <input v-model="form.tag" placeholder="Tag (ex : Urgent)" class="border rounded px-3 py-1 w-full mb-2" />
+    </select></label>
+    <label class="form-field"><span>Note <small>Facultatif</small></span><input v-model.trim="form.tag" placeholder="Ex. À prévoir"></label>
 
-    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Ajouter</button>
+    <p v-if="error" class="form-error" role="alert">{{ error }}</p>
+    <button type="submit" class="button button-primary form-submit" :disabled="saving">{{ saving ? 'Enregistrement…' : expense ? 'Enregistrer les modifications' : 'Ajouter la dépense' }}</button>
   </form>
 </template>
 
 <script>
+import { apiRequest } from '../services/api';
+
+function today() {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function emptyExpense() {
+  return { title: '', amount: '', date: today(), category: '', tag: '' };
+}
+
 export default {
   name: 'ExpenseForm',
   props: {
@@ -32,10 +44,12 @@ export default {
   },
   data() {
     return {
+      error: '',
+      saving: false,
       form: {
         title: '',
         amount: '',
-        date: '',
+        date: today(),
         category:'',
         tag: ''
       }
@@ -48,7 +62,7 @@ export default {
         if (newVal) {
           this.form = { ...newVal }; // préremplit si modif
         } else {
-          this.form = { title: '', amount: '', date: '',  tag: '' , category:''};
+          this.form = emptyExpense();
         }
       }
     }
@@ -56,21 +70,20 @@ export default {
   emits: ['submitted', 'updated'],
   methods: {
     async submitForm() {
+      this.saving = true;
+      this.error = '';
       try {
-        const url = this.expense ? `https://zenwallet.onrender.com/api/expenses/${this.expense.id}` : 'https://zenwallet.onrender.com/api/expenses';
-        const method = this.expense ? 'PUT' : 'POST';
-
-        const response = await fetch(url, {
-          method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(this.form)
-        });
-        if (!response.ok) throw new Error(this.expense ? 'Erreur lors de la mise à jour' : 'Erreur lors de l’ajout');
+        await apiRequest(
+          this.expense ? `/expenses/${this.expense.id}` : '/expenses',
+          { method: this.expense ? 'PUT' : 'POST', body: JSON.stringify(this.form) }
+        );
 
         this.$emit(this.expense ? 'updated' : 'submitted');
-        this.form = { title: '', amount: '', date: '',  tag: '' , category:''};
+        this.form = emptyExpense();
       } catch (error) {
-        alert(error.message);
+        this.error = error.message;
+      } finally {
+        this.saving = false;
       }
     }
   }

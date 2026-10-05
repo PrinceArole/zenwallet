@@ -1,59 +1,75 @@
 const express = require('express');
-const router = express.Router();
 const Revenue = require('../models/Revenue');
 
-// GET /api/revenues - Index
+const router = express.Router();
+const editableFields = ['title', 'amount', 'date', 'source'];
+
 router.get('/', async (req, res) => {
   try {
-    const revenues = await Revenue.findAll({ order: [['date', 'DESC']] });
-    res.json(revenues);
+    const revenues = await Revenue.findAll({
+      where: { user_id: req.userId },
+      order: [['date', 'DESC']],
+    });
+    return res.json(revenues);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erreur lors de la récupération des revenus :', error);
+    return res.status(500).json({ error: 'Impossible de récupérer les revenus.' });
   }
 });
 
-// GET /api/revenues/:id - Show
 router.get('/:id', async (req, res) => {
   try {
-    const revenue = await Revenue.findByPk(req.params.id);
-    if (!revenue) return res.status(404).json({ error: 'Revenu non trouvé' });
-    res.json(revenue);
+    const revenue = await Revenue.findOne({
+      where: { id: req.params.id, user_id: req.userId },
+    });
+    if (!revenue) return res.status(404).json({ error: 'Revenu non trouvé.' });
+    return res.json(revenue);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erreur lors de la récupération du revenu :', error);
+    return res.status(500).json({ error: 'Impossible de récupérer ce revenu.' });
   }
 });
 
-// POST /api/revenues - Store
 router.post('/', async (req, res) => {
   try {
-    const revenue = await Revenue.create(req.body);
-    res.status(201).json(revenue);
+    const revenue = await Revenue.create({
+      ...Object.fromEntries(editableFields.map((field) => [field, req.body[field]])),
+      user_id: req.userId,
+    });
+    return res.status(201).json(revenue);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 });
 
-// PUT /api/revenues/:id - Update
 router.put('/:id', async (req, res) => {
   try {
-    const revenue = await Revenue.findByPk(req.params.id);
-    if (!revenue) return res.status(404).json({ error: 'Revenu non trouvé' });
+    const revenue = await Revenue.findOne({
+      where: { id: req.params.id, user_id: req.userId },
+    });
+    if (!revenue) return res.status(404).json({ error: 'Revenu non trouvé.' });
 
-    await revenue.update(req.body);
-    res.json(revenue);
+    await revenue.update(Object.fromEntries(
+      editableFields
+        .filter((field) => Object.hasOwn(req.body, field))
+        .map((field) => [field, req.body[field]])
+    ));
+    return res.json(revenue);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 });
 
-// DELETE /api/revenues/:id - Destroy
 router.delete('/:id', async (req, res) => {
   try {
-    const deleted = await Revenue.destroy({ where: { id: req.params.id } });
-    if (!deleted) return res.status(404).json({ error: 'Revenu non trouvé' });
-    res.json({ message: 'Revenu supprimé' });
+    const deleted = await Revenue.destroy({
+      where: { id: req.params.id, user_id: req.userId },
+    });
+    if (!deleted) return res.status(404).json({ error: 'Revenu non trouvé.' });
+    return res.json({ message: 'Revenu supprimé.' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erreur lors de la suppression du revenu :', error);
+    return res.status(500).json({ error: 'Impossible de supprimer ce revenu.' });
   }
 });
 

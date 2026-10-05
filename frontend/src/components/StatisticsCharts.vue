@@ -1,10 +1,10 @@
 <template>
-  <div class="p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">
-    <h3 class="text-xl font-bold mb-4 text-gray-800">Statistiques des dépenses</h3>
-    <div class="h-64">
+  <div class="statistics-chart">
+    <div v-if="expenses.length" class="h-64">
       <!-- Le graphique prendra la hauteur disponible -->
       <DoughnutChart :chart-data="categoryData" />
     </div>
+    <div v-else class="chart-empty">Les catégories de dépenses apparaîtront ici.</div>
   </div>
 </template>
 
@@ -22,7 +22,8 @@ const props = defineProps({
 const categoryData = computed(() => {
   const counts = {}
   props.expenses.forEach(exp => {
-    counts[exp.category] = (counts[exp.category] || 0) + exp.amount
+    const category = exp.category || 'Autres'
+    counts[category] = (counts[category] || 0) + Number(exp.amount || 0)
   })
   return {
     labels: Object.keys(counts),

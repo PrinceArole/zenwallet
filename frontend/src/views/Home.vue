@@ -1,309 +1,337 @@
 <template>
-  <div class="min-h-screen bg-gray-100 text-gray-800 p-6">
-    <div class="max-w-4xl mx-auto">
-      <h1 class="text-3xl font-bold mb-6 text-center">Zenwallet</h1>
+  <div class="dashboard-shell">
+    <aside class="sidebar">
+      <a class="brand-lockup dashboard-brand" href="#" aria-label="Zenwallet, accueil">
+        <span class="brand-mark"><span></span><span></span><span></span></span>
+        <span>zenwallet</span>
+      </a>
 
-      <!-- Solde -->
-      <div class="bg-white p-4 rounded-lg shadow mb-6">
-        <h2 class="text-2xl font-semibold uppercase mb-2 text-center">💼 Bilan mensuel</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 text-lg font-medium">
-          <div>Budget : {{ monthlyBudgetAmount }} </div>
-          <div>Revenus : {{ totalRevenus }} </div>
-          <div>Dépenses : {{ totalDepenses }} </div>
+      <div class="sidebar-section-label">ESPACE PERSONNEL</div>
+      <nav class="side-nav" aria-label="Navigation principale">
+        <a class="nav-link nav-link-active" href="#overview"><span class="nav-icon">⌂</span>Vue d’ensemble</a>
+        <a class="nav-link" href="#transactions"><span class="nav-icon">↔</span>Transactions</a>
+        <a class="nav-link" href="#budget"><span class="nav-icon">◷</span>Budget mensuel</a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-tip">
+          <span class="tip-sparkle">✳</span>
+          <p><strong>Un pas à la fois.</strong><br>Chaque décision compte.</p>
         </div>
-        <p class="text-3xl font-bold mt-4 text-center" :class="soldeActuel < 0 ? 'text-red-600' : 'text-green-600'">
-          Solde actuel : <br> {{ soldeActuel }} 
-        </p>
+        <div class="profile-row">
+          <div class="avatar">{{ userInitials }}</div>
+          <div class="profile-copy"><strong>{{ user.name }}</strong><span>{{ user.email }}</span></div>
+          <button class="icon-button logout-button" type="button" title="Se déconnecter" aria-label="Se déconnecter" @click="logout">↗</button>
+        </div>
       </div>
+    </aside>
 
-      <StatisticsCharts :expenses="expenses" />
-
-      <!-- Boutons -->
-      <div class="flex justify-between mb-4 mt-10">
-        <button @click="showAddRevenue = true" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-          Ajouter un revenu
-        </button>
-        <button @click="showAddExpense = true" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
-          Ajouter une dépense
-        </button>
-      </div>
-
-
-      <form @submit.prevent="submitBudget" class="bg-white p-4 rounded shadow mb-6">
-        <h3 class="font-semibold mb-2">💼 {{ budgetRecord ? 'Modifier le budget mensuel' : 'Définir le budget mensuel' }}</h3>
-       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-           <div class="">
-            <input v-model="budgetForm.month" @change="fetchMonthlyBudget" type="month" placeholder="Mois (ex: Juin)" class="border rounded px-3 py-1 w-full mb-2" required />
-           </div>
-        <div class="">
-          <input v-model="budgetForm.amount" type="number" placeholder="Montant ()" class="border rounded px-3 py-1 w-full mb-2" required />
-        </div>
-        <div class="">
-          <button class="bg-indigo-600 text-white px-4 py-2 rounded w-full">{{ budgetRecord ? 'Mettre à jour' : 'Enregistrer' }}</button>
-        </div>
-       </div>
-      </form>
-      <!-- <div class="bg-white p-4 rounded shadow mb-4">
-        <h3 class="font-semibold mb-2">📆 Filtrer par période</h3>
-        <div class="flex gap-4">
-          <input type="date" v-model="filters.startDate" class="input" />
-          <input type="date" v-model="filters.endDate" class="input" />
-          <button @click="fetchFilteredExpenses" class="bg-blue-500 text-white px-4 py-2 rounded">Filtrer</button>
-        </div>
-      </div>  -->
-
-
-      <!-- Modales -->
-      <BaseModal :show="showAddExpense" @close="showAddExpense = false">
-        <ExpenseForm @submitted="onExpenseAdded" />
-      </BaseModal>
-
-      <BaseModal :show="showEditExpense" @close="showEditExpense = false">
-        <ExpenseForm :expense="expenseToEdit" @updated="onExpenseUpdated" />
-      </BaseModal>
-
-      <BaseModal :show="showAddRevenue" @close="closeRevenueModal">
-        <RevenueForm :revenue="selectedRevenue" @submitted="onRevenueAdded" />
-      </BaseModal>
-
-      <!-- Listes -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <main id="overview" class="dashboard-main">
+      <header class="topbar">
         <div>
-          <h3 class="text-lg font-semibold mb-2">💰 Revenus</h3>
-          <ul class="bg-white p-4 rounded shadow space-y-2">
-            <li v-for="r in revenues" :key="r.id" class="flex justify-between border-b pb-1 items-center">
-              <div>
-                <span>{{ r.title }}</span>
-                <span class="text-green-600 font-medium ml-2">+{{ r.amount }} </span>
-              </div>
-              <div class="flex space-x-2">
-                <button @click="openEditRevenue(r)" class="text-blue-600 hover:underline text-sm" title="Modifier">
-                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                    <path fill-rule="evenodd" d="M14 4.182A4.136 4.136 0 0 1 16.9 3c1.087 0 2.13.425 2.899 1.182A4.01 4.01 0 0 1 21 7.037c0 1.068-.43 2.092-1.194 2.849L18.5 11.214l-5.8-5.71 1.287-1.31.012-.012Zm-2.717 2.763L6.186 12.13l2.175 2.141 5.063-5.218-2.141-2.108Zm-6.25 6.886-1.98 5.849a.992.992 0 0 0 .245 1.026 1.03 1.03 0 0 0 1.043.242L10.282 19l-5.25-5.168Zm6.954 4.01 5.096-5.186-2.218-2.183-5.063 5.218 2.185 2.15Z" clip-rule="evenodd"/>
-                  </svg>
-                </button>
-                <button @click="deleteRevenue(r.id)" class="text-red-600 hover:underline text-sm" title="Supprimer">
-                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
-                  </svg>
-                </button>
-              </div>
-            </li>
-          </ul>
+          <div class="breadcrumb">MON ESPACE <span>/</span> VUE D’ENSEMBLE</div>
+          <h1>Bonjour, {{ firstName }} <span class="wave">✳</span></h1>
+          <p class="topbar-subtitle">Voici où en sont vos finances aujourd’hui.</p>
+        </div>
+        <div class="topbar-actions">
+          <span class="current-date">{{ todayLabel }}</span>
+          <button class="button button-primary" type="button" @click="openExpenseForm">
+            <span class="button-plus">+</span> Ajouter une dépense
+          </button>
+        </div>
+      </header>
+
+      <div v-if="pageError" class="notice notice-error" role="alert">{{ pageError }}</div>
+      <div v-if="notice" class="notice notice-success" role="status">{{ notice }}</div>
+
+      <section class="balance-banner" aria-label="Solde actuel">
+        <div class="balance-copy">
+          <span class="overline overline-light">VOTRE SOLDE DISPONIBLE</span>
+          <strong>{{ formatCurrency(soldeActuel) }}</strong>
+          <span class="balance-caption">Budget du mois + revenus − dépenses</span>
+        </div>
+        <div class="balance-decoration" aria-hidden="true">
+          <div class="balance-orbit orbit-one"></div><div class="balance-orbit orbit-two"></div>
+          <div class="balance-orbit orbit-three"></div><span class="balance-star">✳</span>
+        </div>
+        <div class="balance-month"><span>MOIS EN COURS</span><strong>{{ currentMonthLabel }}</strong></div>
+      </section>
+
+      <section class="summary-grid" aria-label="Résumé du mois">
+        <article class="summary-card">
+          <div class="summary-top"><span class="summary-icon budget-icon">◷</span><span class="summary-trend">CE MOIS</span></div>
+          <span class="summary-label">Budget défini</span>
+          <strong>{{ formatCurrency(monthlyBudgetAmount) }}</strong>
+          <span class="summary-foot">{{ budgetRecord ? 'Votre enveloppe mensuelle' : 'Aucun budget défini' }}</span>
+        </article>
+        <article class="summary-card">
+          <div class="summary-top"><span class="summary-icon income-icon">↙</span><span class="summary-trend">CE MOIS</span></div>
+          <span class="summary-label">Revenus</span>
+          <strong>{{ formatCurrency(totalRevenus) }}</strong>
+          <span class="summary-foot">{{ monthRevenues.length }} {{ monthRevenues.length > 1 ? 'entrées' : 'entrée' }} enregistrée{{ monthRevenues.length > 1 ? 's' : '' }}</span>
+        </article>
+        <article class="summary-card">
+          <div class="summary-top"><span class="summary-icon expense-icon">↗</span><span class="summary-trend">CE MOIS</span></div>
+          <span class="summary-label">Dépenses</span>
+          <strong>{{ formatCurrency(totalDepenses) }}</strong>
+          <span class="summary-foot">{{ monthExpenses.length }} {{ monthExpenses.length > 1 ? 'opérations' : 'opération' }} enregistrée{{ monthExpenses.length > 1 ? 's' : '' }}</span>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article id="budget" class="panel budget-panel">
+          <div class="panel-heading">
+            <div><span class="overline">GARDER LE CAP</span><h2>Votre budget</h2></div>
+            <span class="panel-icon">◷</span>
+          </div>
+          <form class="budget-form" @submit.prevent="submitBudget">
+            <label class="form-field budget-month"><span>Mois</span><input v-model="budgetForm.month" type="month" required @change="fetchMonthlyBudget"></label>
+            <label class="form-field"><span>Enveloppe (€)</span><input v-model.number="budgetForm.amount" type="number" min="0" step="0.01" placeholder="0,00" required></label>
+            <button class="button button-dark" type="submit" :disabled="savingBudget">{{ savingBudget ? 'Enregistrement…' : budgetRecord ? 'Mettre à jour' : 'Définir le budget' }}</button>
+          </form>
+          <div class="budget-progress-copy"><span>Dépenses utilisées</span><strong>{{ budgetUsage }} %</strong></div>
+          <div class="progress-track"><span :style="{ width: `${budgetUsage}%` }"></span></div>
+          <div class="budget-foot"><span>{{ formatCurrency(totalDepenses) }} dépensés</span><span>{{ formatCurrency(Math.max(monthlyBudgetAmount - totalDepenses, 0)) }} restants</span></div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-heading">
+            <div><span class="overline">EN UN COUP D’ŒIL</span><h2>Vos dépenses</h2></div>
+            <span class="chart-caption">Par catégorie</span>
+          </div>
+          <StatisticsCharts :expenses="monthExpenses" />
+        </article>
+      </section>
+
+      <section id="transactions" class="panel transactions-panel">
+        <div class="panel-heading transaction-heading">
+          <div><span class="overline">VOTRE ACTIVITÉ</span><h2>Transactions récentes</h2></div>
+          <div class="transaction-actions">
+            <button class="button button-outline" type="button" @click="openRevenueForm"><span class="button-plus">+</span> Ajouter un revenu</button>
+            <button class="button button-soft" type="button" @click="openExpenseForm"><span class="button-plus">+</span> Ajouter une dépense</button>
+          </div>
         </div>
 
-        <div>
-          <h3 class="text-lg font-semibold mb-2">💸 Dépenses</h3>
-          <ul class="bg-white p-4 rounded shadow space-y-2">
-            <li v-for="e in expenses" :key="e.id" class="flex justify-between border-b pb-1 items-center">
-              <div>
-                <span>{{ e.title }}</span>
-                <span v-if="e.tag" class="ml-2 text-xs bg-yellow-300 text-yellow-900 rounded px-1">{{ e.tag }}</span>
-              </div>
-              <div class="flex items-center space-x-2">
-                <span class="text-red-600 font-medium">-{{ e.amount }} </span>
-                <button @click="editExpense(e)" class="text-blue-600 hover:underline text-sm" title="Modifier">
-                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                    <path fill-rule="evenodd" d="M14 4.182A4.136 4.136 0 0 1 16.9 3c1.087 0 2.13.425 2.899 1.182A4.01 4.01 0 0 1 21 7.037c0 1.068-.43 2.092-1.194 2.849L18.5 11.214l-5.8-5.71 1.287-1.31.012-.012Zm-2.717 2.763L6.186 12.13l2.175 2.141 5.063-5.218-2.141-2.108Zm-6.25 6.886-1.98 5.849a.992.992 0 0 0 .245 1.026 1.03 1.03 0 0 0 1.043.242L10.282 19l-5.25-5.168Zm6.954 4.01 5.096-5.186-2.218-2.183-5.063 5.218 2.185 2.15Z" clip-rule="evenodd"/>
-                  </svg>
-                </button>
-                <button @click="deleteExpense(e.id)" class="text-red-600 hover:underline text-sm" title="Supprimer">
-                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
-                  </svg>
-                </button>
-              </div>
-            </li>
-          </ul>
+        <div v-if="!recentTransactions.length" class="empty-state">
+          <span class="empty-icon">✳</span><strong>Votre histoire commence ici.</strong>
+          <p>Ajoutez un revenu ou une dépense pour voir vos transactions apparaître.</p>
         </div>
-      </div>
-    </div>
+        <div v-else class="transaction-list">
+          <div v-for="item in recentTransactions" :key="`${item.kind}-${item.id}`" class="transaction-row">
+            <div class="transaction-symbol" :class="item.kind === 'income' ? 'transaction-symbol-income' : 'transaction-symbol-expense'">{{ item.kind === 'income' ? '↙' : '↗' }}</div>
+            <div class="transaction-description"><strong>{{ item.title }}</strong><span>{{ item.category || item.source || 'Transaction' }} · {{ formatDate(item.date) }}</span></div>
+            <span v-if="item.tag" class="transaction-tag">{{ item.tag }}</span>
+            <strong class="transaction-amount" :class="item.kind === 'income' ? 'amount-income' : 'amount-expense'">{{ item.kind === 'income' ? '+' : '−' }}{{ formatCurrency(item.amount) }}</strong>
+            <div class="transaction-controls">
+              <button class="icon-button" type="button" :aria-label="`Modifier ${item.title}`" title="Modifier" @click="editTransaction(item)">✎</button>
+              <button class="icon-button delete-control" type="button" :aria-label="`Supprimer ${item.title}`" title="Supprimer" @click="deleteTransaction(item)">×</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <footer class="dashboard-footer"><span>zenwallet</span><span>Un regard plus serein sur votre argent.</span></footer>
+    </main>
+
+    <BaseModal :show="showExpenseForm" @close="closeExpenseForm">
+      <ExpenseForm :expense="expenseToEdit" @submitted="onExpenseSaved" @updated="onExpenseSaved" />
+    </BaseModal>
+    <BaseModal :show="showRevenueForm" @close="closeRevenueForm">
+      <RevenueForm :revenue="revenueToEdit" @submitted="onRevenueSaved" />
+    </BaseModal>
   </div>
 </template>
 
 <script>
-import RevenueForm from '../components/RevenueForm.vue'
-import ExpenseForm from '../components/ExpenseForm.vue'
-import BaseModal from '../components/BaseModal.vue'
+import BaseModal from '../components/BaseModal.vue';
+import ExpenseForm from '../components/ExpenseForm.vue';
+import RevenueForm from '../components/RevenueForm.vue';
 import StatisticsCharts from '../components/StatisticsCharts.vue';
+import { apiRequest } from '../services/api';
 
+function localMonth(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
 
 export default {
   name: 'Home',
-  components: {
-    RevenueForm,
-    ExpenseForm,
-    BaseModal,
-    StatisticsCharts,
+  components: { BaseModal, ExpenseForm, RevenueForm, StatisticsCharts },
+  props: {
+    user: { type: Object, required: true },
   },
+  emits: ['logout'],
   data() {
-    const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
+    const today = new Date();
     return {
-      selectedRevenue: null,
-      showAddRevenue: false,
-      showAddExpense: false,
-      showEditExpense: false,
-      expenseToEdit: null,
-      monthlyBudgetAmount: 0,
-      budgetRecord: null,
       revenues: [],
       expenses: [],
-      budgetForm: {
-        month: currentMonth,
-        year: now.getFullYear(),
-        amount: ''
-      },
-      filters: {
-        startDate: '',
-        endDate: ''
-      }
-
-    }
+      monthlyBudgetAmount: 0,
+      budgetRecord: null,
+      budgetForm: { month: localMonth(today), amount: '' },
+      showExpenseForm: false,
+      showRevenueForm: false,
+      expenseToEdit: null,
+      revenueToEdit: null,
+      savingBudget: false,
+      pageError: '',
+      notice: '',
+    };
   },
   computed: {
-    
-      totalRevenus() {
-        return this.revenues.reduce((sum, r) => sum + parseFloat(r.amount), 0);
-      },
-      totalDepenses() {
-        return this.expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
-      },
-      soldeActuel() {
-        return (this.monthlyBudgetAmount + this.totalRevenus - this.totalDepenses).toFixed(2);
-      }
+    userInitials() {
+      return this.user.name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+    },
+    firstName() {
+      return this.user.name.trim().split(/\s+/)[0];
+    },
+    todayLabel() {
+      return new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+    },
+    currentMonthLabel() {
+      const [year, month] = this.budgetForm.month.split('-');
+      if (!year || !month) return '';
+      return new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(new Date(Number(year), Number(month) - 1, 1));
+    },
+    monthRevenues() {
+      return this.revenues.filter((item) => item.date.startsWith(this.budgetForm.month));
+    },
+    monthExpenses() {
+      return this.expenses.filter((item) => item.date.startsWith(this.budgetForm.month));
+    },
+    totalRevenus() {
+      return this.monthRevenues.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    },
+    totalDepenses() {
+      return this.monthExpenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    },
+    soldeActuel() {
+      return this.monthlyBudgetAmount + this.totalRevenus - this.totalDepenses;
+    },
+    budgetUsage() {
+      if (!this.monthlyBudgetAmount) return this.totalDepenses > 0 ? 100 : 0;
+      return Math.min(100, Math.round((this.totalDepenses / this.monthlyBudgetAmount) * 100));
+    },
+    recentTransactions() {
+      return [
+        ...this.revenues.map((item) => ({ ...item, kind: 'income' })),
+        ...this.expenses.map((item) => ({ ...item, kind: 'expense' })),
+      ].sort((first, second) => new Date(second.date) - new Date(first.date)).slice(0, 8);
+    },
+  },
+  async mounted() {
+    await Promise.all([this.fetchRevenues(), this.fetchExpenses(), this.fetchMonthlyBudget()]);
   },
   methods: {
-
-        async fetchFilteredExpenses() {
-      const params = new URLSearchParams(this.filters).toString();
-      const res = await fetch(`https://zenwallet.onrender.com/api/expenses?${params}`);
-      this.expenses = await res.json();
+    formatCurrency(value) {
+      return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(value) || 0);
+    },
+    formatDate(value) {
+      return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T12:00:00`));
     },
     async fetchRevenues() {
-      const res = await fetch('https://zenwallet.onrender.com/api/revenues');
-      this.revenues = await res.json();
+      try {
+        this.revenues = await apiRequest('/revenues');
+      } catch (error) {
+        this.pageError = error.message;
+      }
     },
     async fetchExpenses() {
-      const res = await fetch('https://zenwallet.onrender.com/api/expenses');
-      this.expenses = await res.json();
-    },
-    onRevenueAdded() {
-      this.showAddRevenue = false;
-      this.selectedRevenue = null;
-      this.fetchRevenues();
-    },
-    onExpenseAdded() {
-      this.showAddExpense = false;
-      this.fetchExpenses();
-    },
-    async deleteRevenue(id) {
-      if (!confirm('Êtes-vous sûr de vouloir supprimer ce revenu ?')) return;
-
       try {
-        const response = await fetch(`https://zenwallet.onrender.com/api/revenues/${id}`, {
-          method: 'DELETE'
-        });
-        if (!response.ok) throw new Error('Erreur lors de la suppression du revenu');
-        this.fetchRevenues();
+        this.expenses = await apiRequest('/expenses');
       } catch (error) {
-        alert(error.message);
+        this.pageError = error.message;
       }
     },
-    async deleteExpense(id) {
-      if (!confirm('Êtes-vous sûr de vouloir supprimer cette dépense ?')) return;
-
+    async fetchMonthlyBudget() {
+      this.budgetRecord = null;
+      this.budgetForm.amount = '';
+      this.monthlyBudgetAmount = 0;
+      if (!this.budgetForm.month) return;
       try {
-        const response = await fetch(`https://zenwallet.onrender.com/api/expenses/${id}`, {
-          method: 'DELETE'
-        });
-        if (!response.ok) throw new Error('Erreur lors de la suppression');
-        this.fetchExpenses();
+        const budget = await apiRequest(`/budget/${this.budgetForm.month}`);
+        this.budgetRecord = budget;
+        this.budgetForm.amount = Number(budget.amount);
+        this.monthlyBudgetAmount = Number(budget.amount);
       } catch (error) {
-        alert(error.message);
+        if (error.status !== 404) this.pageError = error.message;
       }
     },
-    editExpense(expense) {
-      this.expenseToEdit = { ...expense };
-      this.showEditExpense = true;
-    },
-    onExpenseUpdated() {
-      this.showEditExpense = false;
-      this.expenseToEdit = null;
-      this.fetchExpenses();
-    },
-    openEditRevenue(revenue) {
-      this.selectedRevenue = revenue;
-      this.showAddRevenue = true;
-    },
-    closeRevenueModal() {
-      this.showAddRevenue = false;
-      this.selectedRevenue = null;
-    },
-
     async submitBudget() {
+      this.savingBudget = true;
+      this.pageError = '';
       try {
         const [year] = this.budgetForm.month.split('-');
-        const isEditing = Boolean(this.budgetRecord);
-        const res = await fetch(
-          isEditing
-            ? `https://zenwallet.onrender.com/api/budget/${this.budgetRecord.id}`
-            : 'https://zenwallet.onrender.com/api/budget',
+        const budget = await apiRequest(
+          this.budgetRecord ? `/budget/${this.budgetRecord.id}` : '/budget',
           {
-            method: isEditing ? 'PUT' : 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: this.budgetRecord ? 'PUT' : 'POST',
             body: JSON.stringify({
-              ...this.budgetForm,
+              month: this.budgetForm.month,
               year: Number(year),
-              amount: Number(this.budgetForm.amount)
-            })
+              amount: Number(this.budgetForm.amount),
+            }),
           }
         );
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || data.message || 'Erreur lors de la sauvegarde');
-        this.budgetRecord = data;
-        this.budgetForm.amount = data.amount;
-        this.monthlyBudgetAmount = Number(data.amount);
-        alert(isEditing ? 'Budget mis à jour' : 'Budget enregistré');
-      } catch (err) {
-        alert(err.message);
+        this.budgetRecord = budget;
+        this.monthlyBudgetAmount = Number(budget.amount);
+        this.notice = 'Votre budget est à jour.';
+      } catch (error) {
+        this.pageError = error.message;
+      } finally {
+        this.savingBudget = false;
       }
     },
-
-
-  async fetchMonthlyBudget() {
-    const month = this.budgetForm.month;
-    this.budgetRecord = null;
-    this.budgetForm.amount = '';
-    this.monthlyBudgetAmount = 0;
-
-    if (!month) return;
-
-    const [year] = month.split('-');
-    this.budgetForm.year = Number(year);
-
-    try {
-      const url = `https://zenwallet.onrender.com/api/budget/${month}`;
-      const res = await fetch(url);
-      if (res.status === 404) return;
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || data.message || 'Erreur lors de la récupération du budget');
-      this.budgetRecord = data;
-      this.budgetForm.year = data.year;
-      this.budgetForm.amount = data.amount;
-      this.monthlyBudgetAmount = Number(data.amount);
-    } catch (err) {
-      console.error('Erreur lors de la récupération du budget :', err);
-    }
-  }
-
+    openExpenseForm() {
+      this.expenseToEdit = null;
+      this.showExpenseForm = true;
+    },
+    closeExpenseForm() {
+      this.showExpenseForm = false;
+      this.expenseToEdit = null;
+    },
+    openRevenueForm() {
+      this.revenueToEdit = null;
+      this.showRevenueForm = true;
+    },
+    closeRevenueForm() {
+      this.showRevenueForm = false;
+      this.revenueToEdit = null;
+    },
+    editTransaction(item) {
+      if (item.kind === 'income') {
+        this.revenueToEdit = { ...item };
+        this.showRevenueForm = true;
+      } else {
+        this.expenseToEdit = { ...item };
+        this.showExpenseForm = true;
+      }
+    },
+    async onExpenseSaved() {
+      this.closeExpenseForm();
+      await this.fetchExpenses();
+    },
+    async onRevenueSaved() {
+      this.closeRevenueForm();
+      await this.fetchRevenues();
+    },
+    async deleteTransaction(item) {
+      if (!window.confirm(`Supprimer « ${item.title} » ?`)) return;
+      try {
+        await apiRequest(`/${item.kind === 'income' ? 'revenues' : 'expenses'}/${item.id}`, { method: 'DELETE' });
+        if (item.kind === 'income') await this.fetchRevenues();
+        else await this.fetchExpenses();
+        this.notice = 'Transaction supprimée.';
+      } catch (error) {
+        this.pageError = error.message;
+      }
+    },
+    async logout() {
+      try {
+        await apiRequest('/auth/logout', { method: 'POST' });
+        this.$emit('logout');
+      } catch (error) {
+        this.pageError = error.message;
+      }
+    },
   },
-  mounted() {
-    this.fetchRevenues();
-    this.fetchExpenses();
-    this.fetchMonthlyBudget();
-  }
-}
+};
 </script>

@@ -1,73 +1,75 @@
-// routes/expenseRoutes.js
-
 const express = require('express');
-const router = express.Router();
 const Expense = require('../models/Expense');
 
+const router = express.Router();
+const editableFields = ['title', 'amount', 'date', 'category', 'tag'];
 
-// GET /api/expense - Index
 router.get('/', async (req, res) => {
   try {
-    const expense = await Expense.findAll({ order: [['date', 'DESC']] });
-    res.json(expense);
+    const expenses = await Expense.findAll({
+      where: { user_id: req.userId },
+      order: [['date', 'DESC']],
+    });
+    return res.json(expenses);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erreur lors de la récupération des dépenses :', error);
+    return res.status(500).json({ error: 'Impossible de récupérer les dépenses.' });
   }
 });
 
-
-// ➕ Ajouter une dépense
-router.post('/', async (req, res) => {
-  try {
-    const expense = await Expense.create(req.body);
-    res.status(201).json(expense);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// GET /api/expense/:id - Show
 router.get('/:id', async (req, res) => {
   try {
-    const expense = await Expense.findByPk(req.params.id);
-    if (!expense) return res.status(404).json({ error: 'Revenu non trouvé' });
-    res.json(expense);
+    const expense = await Expense.findOne({
+      where: { id: req.params.id, user_id: req.userId },
+    });
+    if (!expense) return res.status(404).json({ error: 'Dépense non trouvée.' });
+    return res.json(expense);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erreur lors de la récupération de la dépense :', error);
+    return res.status(500).json({ error: 'Impossible de récupérer cette dépense.' });
   }
 });
 
-// 🔁 Récupérer toutes les dépenses
-router.get('/', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const expenses = await Expense.findAll({ order: [['date', 'DESC']] });
-    res.json(expenses);
+    const expense = await Expense.create({
+      ...Object.fromEntries(editableFields.map((field) => [field, req.body[field]])),
+      user_id: req.userId,
+    });
+    return res.status(201).json(expense);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 });
 
-
-// PUT /api/expenses/:id - Update
 router.put('/:id', async (req, res) => {
   try {
-    const expense = await Expense.findByPk(req.params.id);
-    if (!expense) return res.status(404).json({ error: 'Revenu non trouvé' });
+    const expense = await Expense.findOne({
+      where: { id: req.params.id, user_id: req.userId },
+    });
+    if (!expense) return res.status(404).json({ error: 'Dépense non trouvée.' });
 
-    await expense.update(req.body);
-    res.json(expense);
+    await expense.update(Object.fromEntries(
+      editableFields
+        .filter((field) => Object.hasOwn(req.body, field))
+        .map((field) => [field, req.body[field]])
+    ));
+    return res.json(expense);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 });
 
-// ❌ Supprimer une dépense
 router.delete('/:id', async (req, res) => {
   try {
-    const deleted = await Expense.destroy({ where: { id: req.params.id } });
-    res.json({ deleted });
+    const deleted = await Expense.destroy({
+      where: { id: req.params.id, user_id: req.userId },
+    });
+    if (!deleted) return res.status(404).json({ error: 'Dépense non trouvée.' });
+    return res.json({ message: 'Dépense supprimée.' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erreur lors de la suppression de la dépense :', error);
+    return res.status(500).json({ error: 'Impossible de supprimer cette dépense.' });
   }
 });
 

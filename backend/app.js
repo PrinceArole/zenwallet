@@ -21,7 +21,8 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'https://zenwallet-app.onrender.com', // 🔐 domaine autorisé
+  //origin: 'https://zenwallet-app.onrender.com', // 🔐 domaine autorisé
+  origin: 'http://localhost:5173', // 🔐 domaine autorisé
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
@@ -37,10 +38,10 @@ app.get('/', (req, res) => {
 // Connexion à la base de données
 sequelize.authenticate()
   .then(() => {
-    console.log('Connexion à MySQL réussie');
+    console.log('Connexion à SQLite réussie');
   })
   .catch(err => {
-    console.error('Erreur de connexion à MySQL :', err);
+    console.error('Erreur de connexion à SQLite :', err);
   });
 
   sequelize.sync({ alter: true })

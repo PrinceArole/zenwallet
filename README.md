@@ -8,7 +8,7 @@
 
 Ce projet a été réalisé dans le cadre du module 3DVP pour mettre en pratique :
 
-- Le développement **fullstack** (Vue.js + Express.js + MySQL)
+- Le développement **fullstack** (Vue.js + Express.js + SQLite)
 - Les concepts **DevOps** : CI/CD, linting, tests
 - Le déploiement continu sur **Render**
 
@@ -20,7 +20,7 @@ Ce projet a été réalisé dans le cadre du module 3DVP pour mettre en pratique
 |--------------|--------------------------------|
 | **Frontend** | Vue.js 3 + Vite + Tailwind CSS |
 | **Backend**  | Express.js (Node.js)           |
-| **BDD**      | MySQL (via Sequelize ORM)      |
+| **BDD**      | SQLite (via Sequelize ORM)     |
 | **CI/CD**    | GitHub Actions + Render        |
 | **Tests**    | Jest (ou à ajouter)            |
 | **Lint**     | ESLint                         |
@@ -46,7 +46,7 @@ Ce projet a été réalisé dans le cadre du module 3DVP pour mettre en pratique
 ### 1. Cloner le dépôt
 
 ```bash
-git clone https://github.com/votre-utilisateur/Zenwallet.git
+git clone https://github.com/PrinceArole/Zenwallet.git
 cd Zenwallet
 ```
 
@@ -59,7 +59,7 @@ npm install
 npx nodemon app.js
 ```
 
-> ⚠️ Assurez-vous que MySQL est démarré et que la base `Zenwallet` existe.
+> SQLite est utilisé automatiquement : le fichier `backend/database.sqlite` est créé au démarrage.
 
 ### 3. Frontend
 
@@ -98,4 +98,4 @@ Zenwallet/
 
 ## 👨‍💻 Auteur
 
-- Prénom Nom – [GitHub](https://github.com/votre-utilisateur)
+- Prénom Nom – [GitHub](https://github.com/PrinceArole)

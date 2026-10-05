@@ -13,7 +13,7 @@ const router = express.Router();
 const sessionDuration = 7 * 24 * 60 * 60 * 1000;
 
 function serializeUser(user) {
-  return { id: user.id, name: user.name, email: user.email };
+  return { id: user.id, name: user.name, email: user.email, role: user.role };
 }
 
 function setSessionCookie(res, userId) {

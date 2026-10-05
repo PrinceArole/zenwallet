@@ -9,19 +9,31 @@
     <button class="button button-primary" type="button" @click="checkSession">Réessayer</button>
   </main>
   <AuthView v-else-if="!user" @authenticated="setUser" />
-  <Home v-else :user="user" @logout="user = null" />
+  <AdminDashboard
+    v-else-if="currentPage === 'admin' && user.role === 'admin'"
+    :user="user"
+    @back="currentPage = 'home'"
+    @logout="logout"
+  />
+  <Home
+    v-else
+    :user="user"
+    @logout="logout"
+    @open-admin="currentPage = 'admin'"
+  />
 </template>
 
 <script>
 import AuthView from './views/AuthView.vue';
+import AdminDashboard from './views/AdminDashboard.vue';
 import Home from './views/Home.vue';
 import { apiRequest } from './services/api';
 
 export default {
   name: 'App',
-  components: { AuthView, Home },
+  components: { AuthView, AdminDashboard, Home },
   data() {
-    return { user: null, checkingSession: true, sessionError: '' };
+    return { user: null, checkingSession: true, sessionError: '', currentPage: 'home' };
   },
   async mounted() {
     await this.checkSession();
@@ -42,6 +54,11 @@ export default {
     },
     setUser(user) {
       this.user = user;
+      this.currentPage = 'home';
+    },
+    logout() {
+      this.user = null;
+      this.currentPage = 'home';
     },
   },
 };

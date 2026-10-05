@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 const cookieName = 'zenwallet_session';
 
@@ -21,4 +22,16 @@ function requireAuth(req, res, next) {
   }
 }
 
-module.exports = { cookieName, requireAuth };
+async function requireAdmin(req, res, next) {
+  try {
+    const user = await User.findByPk(req.userId);
+    if (!user) return res.status(401).json({ error: 'Compte introuvable.' });
+    if (user.role !== 'admin') return res.status(403).json({ error: 'Accès réservé aux administrateurs.' });
+    return next();
+  } catch (error) {
+    console.error('Erreur lors de la vérification du rôle administrateur :', error);
+    return res.status(500).json({ error: 'Impossible de vérifier les autorisations.' });
+  }
+}
+
+module.exports = { cookieName, requireAuth, requireAdmin };

@@ -16,12 +16,20 @@ const User = sequelize.define('User', {
     allowNull: false,
     field: 'password_hash',
   },
+  role: {
+    type: DataTypes.STRING(20),
+    allowNull: false,
+    defaultValue: 'user',
+    validate: {
+      isIn: [['user', 'admin']],
+    },
+  },
 }, {
   defaultScope: {
     attributes: { exclude: ['passwordHash'] },
   },
   scopes: {
-    withPassword: { attributes: ['id', 'name', 'email', 'passwordHash'] },
+    withPassword: { attributes: ['id', 'name', 'email', 'passwordHash', 'role'] },
   },
 });
 

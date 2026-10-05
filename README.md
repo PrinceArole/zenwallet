@@ -67,6 +67,18 @@ Crée un secret de session aléatoire pour `JWT_SECRET` dans `backend/.env` (au 
 
 Pour générer un secret avec Node.js : `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`. En local, le frontend utilise `http://localhost:5000/api` par défaut. En production, configure l’URL complète de ton backend, avec le suffixe `/api` (par exemple `https://mon-backend.example.com/api`), dans `frontend/public/runtime-config.js` (`window.ZENWALLET_CONFIG.apiBaseUrl`). Ce fichier est chargé par le navigateur avant l’application : tu peux changer l’adresse sans rebâtir le bundle frontend. En alternative, configure `VITE_API_URL` dans l’environnement de build du frontend (cette méthode nécessite un nouveau build). Sur le backend, renseigne `FRONTEND_ORIGIN` avec l’origine exacte du frontend, sans chemin `/api` ; plusieurs origines peuvent être séparées par des virgules.
 
+#### Espace administrateur (local)
+
+Après avoir créé ton compte, depuis le dossier `backend`, attribue-lui le rôle admin :
+
+```bash
+npm run user:role -- ton-adresse@example.com admin
+```
+
+Redémarre le backend et reconnecte-toi : le bouton « Administration » apparaîtra dans le tableau de bord. Pour retirer le rôle, utilise `npm run user:role -- ton-adresse@example.com user`. Les nouveaux comptes sont toujours créés avec le rôle `user`.
+
+L’espace affiche l’état de SQLite, le volume des requêtes, les erreurs HTTP, les latences, les routes les plus sollicitées, la mémoire du processus et l’état de la planification des sauvegardes. Les métriques sont agrégées en mémoire : elles ne conservent ni adresse IP, ni cookie, ni contenu de transaction, et sont remises à zéro au redémarrage du backend. Le tableau de bord n’est pas un moniteur externe : il ne peut pas signaler une panne complète du backend.
+
 Pour supprimer toutes les données et recréer les tables de la base, lancez depuis `backend` :
 
 ```bash

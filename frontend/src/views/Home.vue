@@ -35,6 +35,9 @@
         </div>
         <div class="topbar-actions">
           <span class="current-date">{{ todayLabel }}</span>
+          <button v-if="user.role === 'admin'" class="button button-outline" type="button" @click="$emit('open-admin')">
+            Administration
+          </button>
           <button class="button button-primary" type="button" @click="openExpenseForm">
             <span class="button-plus">+</span> Ajouter une dépense
           </button>
@@ -158,7 +161,7 @@ export default {
   props: {
     user: { type: Object, required: true },
   },
-  emits: ['logout'],
+  emits: ['logout', 'open-admin'],
   data() {
     const today = new Date();
     return {

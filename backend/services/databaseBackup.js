@@ -7,6 +7,14 @@ const sqlite3 = require('sqlite3');
 const sequelize = require('../config/database');
 
 let backupInProgress = false;
+const backupStatus = {
+  enabled: false,
+  running: false,
+  configurationMessage: 'La sauvegarde planifiée n’a pas été configurée.',
+  lastAttemptAt: null,
+  lastSuccessAt: null,
+  lastError: null,
+};
 
 function createBackupFile(destination) {
   const sourcePath = sequelize.options.storage;
@@ -99,6 +107,9 @@ async function sendDatabaseBackup(transporter, recipient, sender) {
   }
 
   backupInProgress = true;
+  backupStatus.running = true;
+  backupStatus.lastAttemptAt = new Date().toISOString();
+  backupStatus.lastError = null;
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const filename = `zenwallet-backup-${timestamp}.sqlite`;
   const backupPath = path.join(os.tmpdir(), filename);
@@ -113,7 +124,11 @@ async function sendDatabaseBackup(transporter, recipient, sender) {
       attachments: [{ filename, path: backupPath }],
     });
     console.log(`Sauvegarde SQLite envoyée à ${recipient}.`);
+    backupStatus.lastSuccessAt = new Date().toISOString();
     return result;
+  } catch (error) {
+    backupStatus.lastError = 'Échec de la dernière sauvegarde ; consultez les journaux du backend.';
+    throw error;
   } finally {
     try {
       await fs.unlink(backupPath);
@@ -123,6 +138,7 @@ async function sendDatabaseBackup(transporter, recipient, sender) {
       }
     }
     backupInProgress = false;
+    backupStatus.running = false;
   }
 }
 
@@ -130,6 +146,8 @@ function startDatabaseBackupSchedule() {
   const mailConfiguration = getMailConfiguration();
 
   if (mailConfiguration.missingVariables) {
+    backupStatus.enabled = false;
+    backupStatus.configurationMessage = `Configuration incomplète : ${mailConfiguration.missingVariables.join(', ')}.`;
     console.warn(
       `Sauvegardes par courriel désactivées : configurez ${mailConfiguration.missingVariables.join(', ')}.`
     );
@@ -153,8 +171,14 @@ function startDatabaseBackupSchedule() {
     });
   }, { timezone });
 
+  backupStatus.enabled = true;
+  backupStatus.configurationMessage = null;
   console.log(`Sauvegarde SQLite planifiée (${expression}, fuseau ${timezone}).`);
   return task;
+}
+
+function getDatabaseBackupStatus() {
+  return { ...backupStatus };
 }
 
 module.exports = {
@@ -162,4 +186,5 @@ module.exports = {
   getMailConfiguration,
   sendDatabaseBackup,
   startDatabaseBackupSchedule,
+  getDatabaseBackupStatus,
 };

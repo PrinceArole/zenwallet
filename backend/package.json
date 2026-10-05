@@ -9,7 +9,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "db:reset": "node scripts/resetDatabase.js"
+    "db:reset": "node scripts/resetDatabase.js",
+    "user:role": "node scripts/setUserRole.js"
   },
   "keywords": [],
   "author": "",

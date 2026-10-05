@@ -13,8 +13,10 @@ const authRoutes = require('./routes/authRoutes');
 const revenueRoutes = require('./routes/revenueRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const budgetRoutes = require('./routes/budgetRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const { createRequestMetrics } = require('./services/requestMetrics');
 const { startDatabaseBackupSchedule } = require('./services/databaseBackup');
-const { requireAuth } = require('./middleware/requireAuth');
+const { requireAuth, requireAdmin } = require('./middleware/requireAuth');
 
 const app = express();
 const configuredOrigins = (process.env.FRONTEND_ORIGIN || '')
@@ -28,6 +30,7 @@ const allowedOrigins = new Set([
   'https://zenwallet-app.onrender.com',
   ...configuredOrigins,
 ]);
+const requestMetrics = createRequestMetrics();
 
 async function migrateUserOwnershipColumns() {
   const queryInterface = sequelize.getQueryInterface();
@@ -44,6 +47,16 @@ async function migrateUserOwnershipColumns() {
       console.log(`Colonne user_id ajoutée à ${tableName}.`);
     }
   }
+
+  const userColumns = await queryInterface.describeTable('Users');
+  if (!userColumns.role) {
+    await queryInterface.addColumn('Users', 'role', {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: 'user',
+    });
+    console.log('Colonne role ajoutée à Users.');
+  }
 }
 
 app.use(cors({
@@ -56,10 +69,12 @@ app.use(cors({
 }));
 app.use(cookieParser());
 app.use(express.json());
+app.use(requestMetrics.middleware);
 app.use('/api/auth', authRoutes);
 app.use('/api/revenues', requireAuth, revenueRoutes);
 app.use('/api/expenses', requireAuth, expenseRoutes);
 app.use('/api/budget', requireAuth, budgetRoutes);
+app.use('/api/admin', requireAuth, requireAdmin, adminRoutes(requestMetrics));
 
 app.get('/', (req, res) => {
   res.send('Bienvenue sur l’API BudgetWise');

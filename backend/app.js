@@ -85,11 +85,11 @@ async function startServer() {
     await sequelize.authenticate();
     await sequelize.sync();
     await migrateUserOwnershipColumns();
-    console.log('Connexion à SQLite réussie et modèles synchronisés.');
+    console.log('Connexion à MySQL réussie et modèles synchronisés.');
     try {
       startDatabaseBackupSchedule();
     } catch (err) {
-      console.error('Erreur lors de la planification des sauvegardes SQLite :', err);
+      console.error('Erreur lors de la planification des sauvegardes MySQL :', err);
     }
 
     const PORT = process.env.PORT || 5000;

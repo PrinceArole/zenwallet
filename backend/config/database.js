@@ -1,9 +1,12 @@
-const path = require('path');
+require('dotenv').config();
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: path.join(__dirname, '..', 'database.sqlite'),
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL est obligatoire (ex. mysql://user:password@localhost:3306/zenwallet).');
+}
+
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'mysql',
   logging: false,
 });
 

@@ -72,7 +72,7 @@
 
         <div class="space-y-6">
           <article class="rounded-2xl border border-zen-line bg-white p-5 shadow-sm">
-            <h2 class="font-display text-2xl">Sauvegardes SQLite</h2>
+            <h2 class="font-display text-2xl">Sauvegardes MySQL</h2>
             <div class="mt-4 flex items-center gap-2">
               <span class="h-2.5 w-2.5 rounded-full" :class="metrics.backup.enabled ? 'bg-emerald-500' : 'bg-amber-500'"></span>
               <strong>{{ metrics.backup.enabled ? 'Planification active' : 'Planification inactive' }}</strong>

@@ -1,9 +1,12 @@
 const fs = require('fs').promises;
+const { createWriteStream } = require('fs');
 const os = require('os');
 const path = require('path');
+const { spawn } = require('child_process');
+const { once } = require('events');
+const { pipeline } = require('stream/promises');
 const cron = require('node-cron');
 const nodemailer = require('nodemailer');
-const sqlite3 = require('sqlite3');
 const sequelize = require('../config/database');
 
 let backupInProgress = false;
@@ -17,52 +20,42 @@ const backupStatus = {
 };
 
 function createBackupFile(destination) {
-  const sourcePath = sequelize.options.storage;
+  const { host, port, username, password, database } = sequelize.config;
+  const dump = spawn(process.env.MYSQLDUMP_PATH || 'mysqldump', [
+    `--host=${host}`,
+    `--port=${port}`,
+    `--user=${username}`,
+    '--single-transaction',
+    '--routines',
+    '--triggers',
+    '--databases',
+    database,
+  ], {
+    env: { ...process.env, MYSQL_PWD: password },
+    windowsHide: true,
+  });
 
-  if (!sourcePath || sourcePath === ':memory:') {
-    return Promise.reject(new Error('Le chemin de la base SQLite sur disque est introuvable.'));
-  }
+  let stderr = '';
+  dump.stderr.setEncoding('utf8');
+  dump.stderr.on('data', (chunk) => {
+    stderr = `${stderr}${chunk}`.slice(-16000);
+  });
 
-  return new Promise((resolve, reject) => {
-    const source = new sqlite3.Database(sourcePath, sqlite3.OPEN_READONLY, (openError) => {
-      if (openError) {
-        source.close(() => reject(openError));
-        return;
-      }
-
-      const backup = source.backup(destination, (backupError) => {
-        if (backupError) {
-          closeSource(backupError);
-          return;
-        }
-
-        const copyNextPage = () => {
-          backup.step(-1, (stepError, complete) => {
-            if (stepError) {
-              closeSource(stepError);
-            } else if (!complete) {
-              setTimeout(copyNextPage, 100);
-            } else {
-              backup.finish((finishError) => closeSource(finishError));
-            }
-          });
-        };
-
-        copyNextPage();
+  return Promise.all([
+    pipeline(dump.stdout, createWriteStream(destination, { flags: 'wx' })),
+    once(dump, 'close'),
+  ]).then(([, [exitCode, signal]]) => {
+    if (exitCode !== 0) {
+      throw new Error(`mysqldump a échoué (${signal || exitCode}) : ${stderr.trim() || 'erreur inconnue'}`);
+    }
+  }).catch((error) => {
+    dump.kill();
+    if (error.code === 'ENOENT') {
+      throw new Error('mysqldump est introuvable. Installez les outils client MySQL ou définissez MYSQLDUMP_PATH.', {
+        cause: error,
       });
-
-      function closeSource(error) {
-        source.close((closeError) => {
-          if (error) {
-            reject(error);
-          } else if (closeError) {
-            reject(closeError);
-          } else {
-            resolve();
-          }
-        });
-      }
-    });
+    }
+    throw error;
   });
 }
 
@@ -102,7 +95,7 @@ function getMailConfiguration() {
 
 async function sendDatabaseBackup(transporter, recipient, sender) {
   if (backupInProgress) {
-    console.warn('Sauvegarde SQLite ignorée : une sauvegarde précédente est toujours en cours.');
+    console.warn('Sauvegarde MySQL ignorée : une sauvegarde précédente est toujours en cours.');
     return;
   }
 
@@ -111,7 +104,7 @@ async function sendDatabaseBackup(transporter, recipient, sender) {
   backupStatus.lastAttemptAt = new Date().toISOString();
   backupStatus.lastError = null;
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const filename = `zenwallet-backup-${timestamp}.sqlite`;
+  const filename = `zenwallet-backup-${timestamp}.sql`;
   const backupPath = path.join(os.tmpdir(), filename);
 
   try {
@@ -119,11 +112,11 @@ async function sendDatabaseBackup(transporter, recipient, sender) {
     const result = await transporter.sendMail({
       from: sender,
       to: recipient,
-      subject: `Sauvegarde SQLite Zenwallet - ${timestamp}`,
-      text: 'La sauvegarde de la base de données SQLite est jointe à ce message.',
+      subject: `Sauvegarde MySQL Zenwallet - ${timestamp}`,
+      text: 'La sauvegarde de la base de données MySQL est jointe à ce message.',
       attachments: [{ filename, path: backupPath }],
     });
-    console.log(`Sauvegarde SQLite envoyée à ${recipient}.`);
+    console.log(`Sauvegarde MySQL envoyée à ${recipient}.`);
     backupStatus.lastSuccessAt = new Date().toISOString();
     return result;
   } catch (error) {
@@ -173,7 +166,7 @@ function startDatabaseBackupSchedule() {
 
   backupStatus.enabled = true;
   backupStatus.configurationMessage = null;
-  console.log(`Sauvegarde SQLite planifiée (${expression}, fuseau ${timezone}).`);
+  console.log(`Sauvegarde MySQL planifiée (${expression}, fuseau ${timezone}).`);
   return task;
 }
 

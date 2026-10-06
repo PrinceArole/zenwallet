@@ -15,7 +15,7 @@ module.exports = function createAdminRoutes(requestMetrics) {
         latencyMs: Number((Number(process.hrtime.bigint() - started) / 1e6).toFixed(2)),
       };
     } catch (error) {
-      console.error('Échec de la vérification de santé de SQLite :', error);
+      console.error('Échec de la vérification de santé de MySQL :', error);
       database = { status: 'error' };
     }
 

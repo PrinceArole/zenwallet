@@ -8,7 +8,7 @@
 
 Ce projet a été réalisé dans le cadre du module 3DVP pour mettre en pratique :
 
-- Le développement **fullstack** (Vue.js + Express.js + SQLite)
+- Le développement **fullstack** (Vue.js + Express.js + MySQL)
 - Les concepts **DevOps** : CI/CD, linting, tests
 - Le déploiement continu sur **Render**
 
@@ -20,7 +20,7 @@ Ce projet a été réalisé dans le cadre du module 3DVP pour mettre en pratique
 |--------------|--------------------------------|
 | **Frontend** | Vue.js 3 + Vite + Tailwind CSS |
 | **Backend**  | Express.js (Node.js)           |
-| **BDD**      | SQLite (via Sequelize ORM)     |
+| **BDD**      | MySQL (via Sequelize ORM)      |
 | **CI/CD**    | GitHub Actions + Render        |
 | **Tests**    | Jest (ou à ajouter)            |
 | **Lint**     | ESLint                         |
@@ -59,7 +59,21 @@ npm install
 npx nodemon app.js
 ```
 
-> SQLite est utilisé automatiquement : le fichier `backend/database.sqlite` est créé au démarrage.
+Configure uniquement `DATABASE_URL` pour la connexion MySQL dans `backend/.env`, au format `mysql://utilisateur:mot_de_passe@hote:3306/nom_de_base`. Si le mot de passe contient des caractères spéciaux (`@`, `:`, `/`, etc.), encode-les au format URL. La base doit exister ; les tables sont créées au premier démarrage du backend.
+
+Par exemple, crée la base vide depuis un compte MySQL autorisé :
+
+```sql
+CREATE DATABASE zenwallet CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+Pour transférer les données de la base locale SQLite existante, configure d’abord MySQL et crée la base de destination vide, puis lance depuis `backend` :
+
+```bash
+npm run db:migrate:sqlite
+```
+
+La migration importe les utilisateurs, revenus, dépenses et budgets depuis `backend/database.sqlite` en conservant leurs identifiants. Elle refuse d’ajouter des données si les tables correspondantes dans MySQL ne sont pas vides. Après la migration, démarre le backend normalement.
 
 #### Comptes utilisateurs
 
@@ -77,7 +91,7 @@ npm run user:role -- ton-adresse@example.com admin
 
 Redémarre le backend et reconnecte-toi : le bouton « Administration » apparaîtra dans le tableau de bord. Pour retirer le rôle, utilise `npm run user:role -- ton-adresse@example.com user`. Les nouveaux comptes sont toujours créés avec le rôle `user`.
 
-L’espace affiche l’état de SQLite, le volume des requêtes, les erreurs HTTP, les latences, les routes les plus sollicitées, la mémoire du processus et l’état de la planification des sauvegardes. Les métriques sont agrégées en mémoire : elles ne conservent ni adresse IP, ni cookie, ni contenu de transaction, et sont remises à zéro au redémarrage du backend. Le tableau de bord n’est pas un moniteur externe : il ne peut pas signaler une panne complète du backend.
+L’espace affiche l’état de MySQL, le volume des requêtes, les erreurs HTTP, les latences, les routes les plus sollicitées, la mémoire du processus et l’état de la planification des sauvegardes. Les métriques sont agrégées en mémoire : elles ne conservent ni adresse IP, ni cookie, ni contenu de transaction, et sont remises à zéro au redémarrage du backend. Le tableau de bord n’est pas un moniteur externe : il ne peut pas signaler une panne complète du backend.
 
 Pour supprimer toutes les données et recréer les tables de la base, lancez depuis `backend` :
 
@@ -85,9 +99,9 @@ Pour supprimer toutes les données et recréer les tables de la base, lancez dep
 npm run db:reset
 ```
 
-#### Sauvegarde SQLite par courriel
+#### Sauvegarde MySQL par courriel
 
-Le backend peut envoyer automatiquement une copie cohérente de la base en pièce jointe. Configurez dans `backend/.env` les variables `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION` et `MAIL_FROM_ADDRESS` (voir `backend/.env.example`). Par défaut, la sauvegarde est envoyée à l’adresse `MAIL_FROM_ADDRESS`; définissez `BACKUP_EMAIL_TO` pour choisir une autre adresse. L’envoi est planifié chaque jour à minuit, heure de Paris. Modifiez `BACKUP_CRON` pour changer l’horaire et `BACKUP_TIMEZONE` pour changer le fuseau horaire. Avec Gmail, utilisez `smtp.gmail.com`, le port `587`, `MAIL_ENCRYPTION=tls` et un mot de passe d’application Google dans `MAIL_PASSWORD`.
+Le backend peut envoyer automatiquement un export SQL cohérent de la base en pièce jointe. `mysqldump` (outil client MySQL) doit être installé et accessible dans le `PATH`; sinon, indiquez son chemin avec `MYSQLDUMP_PATH`. Configurez dans `backend/.env` les variables `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION` et `MAIL_FROM_ADDRESS` (voir `backend/.env.example`). Par défaut, la sauvegarde est envoyée à l’adresse `MAIL_FROM_ADDRESS`; définissez `BACKUP_EMAIL_TO` pour choisir une autre adresse. L’envoi est planifié chaque jour à minuit, heure de Paris. Modifiez `BACKUP_CRON` pour changer l’horaire et `BACKUP_TIMEZONE` pour changer le fuseau horaire. Avec Gmail, utilisez `smtp.gmail.com`, le port `587`, `MAIL_ENCRYPTION=tls` et un mot de passe d’application Google dans `MAIL_PASSWORD`.
 
 ### 3. Frontend
 

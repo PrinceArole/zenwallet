@@ -10,6 +10,7 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "db:reset": "node scripts/resetDatabase.js",
+    "db:migrate:sqlite": "node scripts/migrateSqliteToMysql.js",
     "user:role": "node scripts/setUserRole.js"
   },
   "keywords": [],
@@ -23,6 +24,7 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.14.1",
     "node-cron": "^4.6.0",
     "nodemailer": "^10.0.15",
     "sequelize": "^6.37.7",
